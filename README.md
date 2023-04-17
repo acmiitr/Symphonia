@@ -11,6 +11,28 @@ npm install
 npm run dev
 ```
 
+## Plan
+
+``` js
+~ Symphonia
+    |
+    |---> A Classic Renderer
+    |
+    |---> Custom Fractals Shaders (webgl)
+    |
+    |---> HeadTracking using TensorFlow.
+    |
+    |---> Music Import and Read :)
+    |
+    |---> Make the Fractals react a/c to the music
+    |
+    |---> Procedural terrain generation a/c to MUSIC
+    |
+    |---> World Generation [Procedural.js](https://www.procedural.eu/)
+    |
+    |---> Gryoscope/ Accelerometer Integration. 
+```
+
 ## Contribution
 
 Fork the repo and make PR accordingly. Reach out us on Discord.
