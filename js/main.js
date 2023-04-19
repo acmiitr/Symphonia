@@ -1,121 +1,128 @@
 import '/template/style.css'
 
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-// Scene, Camera and Renderer
-const scene = new THREE.Scene();
+import { Controller } from "./controller.js";
+import { fragmentShader } from "./shader.js";
 
-let aspect_ratio = window.innerWidth / window.innerHeight;
+// // Scene, Camera and Renderer
+// const scene = new THREE.Scene();
 
-const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
+// let aspect_ratio = window.innerWidth / window.innerHeight;
 
-const renderer = new THREE.WebGLRenderer(
-  {
-    antialias: false,
-    precision: 'highp',
-    canvas: document.querySelector(".webgl"),
-  }
-)
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.setSize(window.innerWidth, window.innerHeight);
+// const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
 
-//Controls
-const orbit = new OrbitControls(camera, renderer.domElement);
+// const renderer = new THREE.WebGLRenderer(
+//   {
+//     antialias: false,
+//     precision: 'highp',
+//     canvas: document.querySelector(".webgl"),
+//   }
+// )
+// renderer.setPixelRatio(window.devicePixelRatio);
+// renderer.setSize(window.innerWidth, window.innerHeight);
 
-// camera.position.setZ(30);
+// //Controls
+// const orbit = new OrbitControls(camera, renderer.domElement);
 
-
-//Init uniforms and materials
-const uniforms = { //GLSL types only 
-  res: {
-    type: 'vec2',
-    value: new THREE.Vector2(window.innerWidth, window.innerHeight)
-  },
-  aspect: {
-    type: 'float', value: aspect_ratio
-  }
-};
-
-const geometry = new THREE.PlaneGeometry(2000, 2000);
-const material = new THREE.ShaderMaterial(
-  {
-    fragmentShader: fragmentShader(), // can also just be a string
-    uniforms: uniforms
-  }
-);
-const mesh = new THREE.Mesh(geometry, material);
-scene.add(mesh);
-
-animate();
+// // camera.position.setZ(30);
 
 
-// // Adding objects here 
-// const obj_geometry = new THREE.BoxGeometry(5, 5, 5);
-// const material1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
-// const material2 = new THREE.MeshStandardMaterial({ color: "#f08c35" });
-// const obj = new THREE.Mesh(obj_geometry, material1);
-// scene.add(obj);
+// //Init uniforms and materials
+// const uniforms = { //GLSL types only 
+//   res: {
+//     type: 'vec2',
+//     value: new THREE.Vector2(window.innerWidth, window.innerHeight)
+//   },
+//   aspect: {
+//     type: 'float', value: aspect_ratio
+//   }
+// };
 
-// const plane_geometry = new THREE.PlaneGeometry(30, 30);
-// const plane = new THREE.Mesh(plane_geometry, material2);
-// // plane.rotateX(45);
-// // scene.add(plane);
+// const geometry = new THREE.PlaneGeometry(2000, 2000);
+// const material = new THREE.ShaderMaterial(
+//   {
+//     fragmentShader: fragmentShader(), // can also just be a string
+//     uniforms: uniforms
+//   }
+// );
+// const mesh = new THREE.Mesh(geometry, material);
+// scene.add(mesh);
 
-// // light
-// const light = new THREE.DirectionalLight(0xffffff, 1, 100);
-// const ambLight = new THREE.AmbientLight(0xffffff, 0.5) 
-// light.position.set(0, 10, 10);
-// scene.add(light);
-// scene.add(ambLight);
-
-// camera.position.z = 25;
+// animate();
 
 
-// updating on window size
-window.addEventListener("resize", () => {
-  camera.updateProjectionMatrix()
-  renderer.setSize(window.innerWidth, window.innerHeight)
-})
+// // // Adding objects here 
+// // const obj_geometry = new THREE.BoxGeometry(5, 5, 5);
+// // const material1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
+// // const material2 = new THREE.MeshStandardMaterial({ color: "#f08c35" });
+// // const obj = new THREE.Mesh(obj_geometry, material1);
+// // scene.add(obj);
 
-// updating the scene
-function animate() {
-  requestAnimationFrame(animate)
-  // orbit.update();
+// // const plane_geometry = new THREE.PlaneGeometry(30, 30);
+// // const plane = new THREE.Mesh(plane_geometry, material2);
+// // // plane.rotateX(45);
+// // // scene.add(plane);
 
-  renderer.render(scene, camera)
+// // // light
+// // const light = new THREE.DirectionalLight(0xffffff, 1, 100);
+// // const ambLight = new THREE.AmbientLight(0xffffff, 0.5) 
+// // light.position.set(0, 10, 10);
+// // scene.add(light);
+// // scene.add(ambLight);
+
+// // camera.position.z = 25;
+
+
+// // updating on window size
+// window.addEventListener("resize", () => {
+//   camera.updateProjectionMatrix()
+//   renderer.setSize(window.innerWidth, window.innerHeight)
+// })
+
+// // updating the scene
+// function animate() {
+//   requestAnimationFrame(animate)
+//   // orbit.update();
+
+//   renderer.render(scene, camera)
+// }
+
+
+let geometry, material, mesh;
+
+// Main ================================================
+function main() {
+  Controller.setup();
+
+  // add GUI
+  // var gui = new dat.GUI({ width: 300 });
+
+  // for (var key in Controller.parameters) {
+  //   gui.add(Controller.parameters, key, -1.0, 1.0).onChange(Controller.changeParams);
+  // }
+
+  // create plane of shader
+  geometry = new THREE.PlaneGeometry(2, 2);
+  material = new THREE.ShaderMaterial({
+    uniforms: Controller.uniforms,
+    fragmentShader: fragmentShader,
+  });
+
+  mesh = new THREE.Mesh(geometry, material);
+
+  Controller.scene.add(mesh);
+
+  // ANIMATE ==================
+  Controller.animate();
 }
 
+window.addEventListener('resize', Controller.windowResize, false);
+Controller.renderer.domElement.addEventListener('mousemove', Controller.mouseMove, false);
+Controller.renderer.domElement.addEventListener('click', Controller.onClick, false);
+window.addEventListener('keydown', Controller.onKeyDown, false);
+window.addEventListener('keyup', Controller.onKeyUp, false);
 
-function fragmentShader() {
-  return `
-    precision highp float;
-    uniform vec2 res;
-    uniform float aspect;
-
-    float mandelbrot(vec2 c){
-      int max_iter = 400;
-      float alpha = 1.0;
-      vec2 z = vec2(0.0 , 0.0);      
-      for(int i = 0; i < max_iter; i++){  // i < max iterations        
-        float x_sq = z.x*z.x;
-        float y_sq = z.y*z.y;
-        vec2 z_sq = vec2(x_sq - y_sq, 2.0*z.x*z.y);        
-        
-        z = z_sq + c;        
-        if(x_sq + y_sq > 4.0){
-          alpha = float(i)/float(max_iter);
-          break;
-        }
-      }
-      return alpha;
-    }  
-    
-    void main(){ // gl_FragCoord in [0,1]
-      vec2 uv = 4.0 * vec2(aspect, 1.0) * gl_FragCoord.xy / res -2.0*vec2(aspect, 1.0);
-      float s = 1.0 - mandelbrot(uv);
-      vec3 coord = vec3(s, s, s);
-      gl_FragColor = vec4(pow(coord, vec3(7.0, 8.0, 5.0)), 1.0);
-    }
-  `
-}
+// call to main
+main();
