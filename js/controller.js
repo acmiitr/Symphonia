@@ -105,10 +105,10 @@ class Controller {
 		// console.log(Controller.mouseY);
 		// console.log(Controller.mouseMoved);
 		// console.log(Controller.keyTracker);
-		console.log(Controller.uniforms.iTime);
+		// console.log(Controller.uniforms.iTime);
 
-		requestAnimationFrame(Controller.animate);
 		Controller.renderer.render(Controller.scene, Controller.camera);
+		requestAnimationFrame(Controller.animate);
 	}
 
 	static updateUniforms() {

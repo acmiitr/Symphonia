@@ -108,6 +108,7 @@ function main() {
   material = new THREE.ShaderMaterial({
     uniforms: Controller.uniforms,
     fragmentShader: fragmentShader(),
+    glslVersion: THREE.GLSL3,
   });
 
   mesh = new THREE.Mesh(geometry, material);

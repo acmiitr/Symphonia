@@ -34,8 +34,7 @@
 function fragmentShader() {
 
 return `
-	#version 430 core
-	// out vec4 fragColor;
+	out vec4 fragColor;
 	// in vec4 gl_FragCoord;
 
 	precision highp float;
@@ -68,7 +67,7 @@ return `
 	const float EPSILON = 0.0001;
 	#define M_PI 3.14159265359
 
-	mat4 viewMatrix(vec3 eye, vec3 center, vec3 up);
+	mat4 view_Matrix(vec3 eye, vec3 center, vec3 up);
 
 	//utility functions
 	float smin(float a, float b, float k);
@@ -214,7 +213,7 @@ return `
 
 		vec3 viewDir = rayDirection(camFOV, iResolution, fragCoord.xy);
 
-		mat4 viewToWorld = viewMatrix(camPos, camPos + camFront, camUp);
+		mat4 viewToWorld = view_Matrix(camPos, camPos + camFront, camUp);
 
 		vec3 worldDir = (viewToWorld * vec4(viewDir, 0.0)).xyz;
 
@@ -243,7 +242,7 @@ return `
 		
 		//lights[1].pos = vec3(2.0 * sin(0.37 * iTime), 2.0 * cos(0.37 * iTime), 2.0);
 
-		lights[1].pos = vec3(0.1 * sin(0.5 * iTime), 0.2 * (sin(0.5 * iTime) + 1) + 0.95, 0.1 * cos(0.5 * iTime));
+		lights[1].pos = vec3(0.1 * sin(0.5 * iTime), 0.2 * (sin(0.5 * iTime) + 1.0)+0.95, 0.1 * cos(0.5 * iTime));
 		lights[1].intensity = vec3(1.2, 0.2, 0.2);
 
 		const vec3 ambientLight = vec3(1.0, 1.0, 1.0);
@@ -261,7 +260,7 @@ return `
 		//}
 
 		for (int i = 0; i < nLights; i++) {
-			color -= 0.25 * soft_shadow(p, normalize(lights[i].pos - p), 0.1, length(lights[i].pos - p), 2048);
+			color -= 0.25;
 		}
 		fragColor = vec4(color, 1.0);
 	}
@@ -308,8 +307,8 @@ return `
 
 	float smin(float a, float b, float k) {
 		k = 0.2;
-		float h = clamp(0.5 + 0.5 * (b - a) / k, 0, 1);
-		return mix(b, a, h) - k * h * (1 - h);
+		float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+		return mix(b, a, h) - k * h * (1.0 - h);
 	}
 
 	float boxSDF(vec3 p, vec3 dim) {
@@ -363,7 +362,7 @@ return `
 		return max(A, -B);
 	}
 
-	mat4 viewMatrix(vec3 eye, vec3 center, vec3 up) {
+	mat4 view_Matrix(vec3 eye, vec3 center, vec3 up) {
 		// Based on gluLookAt man page
 		vec3 f = normalize(center - eye);
 		vec3 s = normalize(cross(f, up));
