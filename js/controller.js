@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+
 class Controller {
 	// GLOBALS ================================================
 	// screen data
 	static aspect = window.innerWidth / window.innerHeight;
 
+	static clock = new THREE.Clock();
 
 	// mouse data
 	static firstMouseMove = true;
@@ -24,13 +26,25 @@ class Controller {
 		"Shift": false,
 	};
 
-
 	// camera data
 	static camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
 	static cameraX = new THREE.Vector3(-0.61, 0.0, -0.79);
 	static cameraY = new THREE.Vector3(-0.79, 0.0, 0.61);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
 	static cameraPos = new THREE.Vector3(1.15, 0.11, -1.2);
+	static cameraFront = new THREE.Vector3(-0.01, -0.3, -1.0).normalize();
+	static cameraUp = new THREE.Vector3(0.0, 1.0, 0.0).normalize();
+	static cameraFOV = 90.0;
+
+
+	//fractal uniforms
+	static MAX_MARCHING_STEPS = 64;
+	static MIN_DISTANCE = 0.00001;
+	static MAX_DISTANCE = 1000.0;
+	static ITERATIONS = 100;
+	static sphere_fold_min_radius = 0.01;
+	static sphere_fold_fixed_radius = 2.0;
+
 
 	//Coordinate data
 	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);
@@ -41,12 +55,29 @@ class Controller {
 	// data passed to shader
 	// uniforms
 	static uniforms = {
-		res: { type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+		iResolution: { type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+		iTime: {type: 'float', value : 0.0},
+		iTimeDelta: {type: 'float', value : 0.0},
+		
+		
 		aspect: { type: 'float', value: Controller.aspect },
+
 		cameraX: { type: 'vec3', value: Controller.cameraX },
 		cameraY: { type: 'vec3', value: Controller.cameraY },
 		cameraZ: { type: 'vec3', value: Controller.cameraZ },
-		cameraPos: { type: 'vec3', value: Controller.cameraPos },
+		
+		camPos: { type: 'vec3', value: Controller.cameraPos },
+		camFOV: {type: 'float', value : Controller.cameraFOV},
+		camFront: {type: 'vec3', value : Controller.cameraFront},
+		camUp: {type: 'vec3', value : Controller.cameraUp},
+
+		MAX_MARCHING_STEPS: {type: 'int', value : Controller.MAX_MARCHING_STEPS},
+		MIN_DISTANCE: {type: 'float', value : Controller.MIN_DISTANCE},
+		MAX_DISTANCE: {type: 'float', value : Controller.MAX_DISTANCE},
+		ITERATIONS: {type: 'int', value : Controller.ITERATIONS},
+		
+		sphere_fold_fixed_radius: {type: 'float', value : Controller.sphere_fold_fixed_radius},
+		sphere_fold_min_radius: {type: 'float', value : Controller.sphere_fold_min_radius},
 	};
 
 	// THREE.js objects
@@ -68,12 +99,23 @@ class Controller {
 	// ANIMATION ================================================
 	static animate() {
 		Controller.updateUniforms();
+		
+		// console.log(Controller.cameraPos);
+		// console.log(Controller.mouseX);
+		// console.log(Controller.mouseY);
+		// console.log(Controller.mouseMoved);
+		// console.log(Controller.keyTracker);
+		console.log(Controller.uniforms.iTime);
 
-		Controller.renderer.render(Controller.scene, Controller.camera);
 		requestAnimationFrame(Controller.animate);
+		Controller.renderer.render(Controller.scene, Controller.camera);
 	}
 
 	static updateUniforms() {
+		
+		Controller.uniforms.iTime.value = Controller.clock.getElapsedTime(); 
+		Controller.uniforms.iTimeDelta.value = Controller.clock.getDelta(); 
+
 		Controller.updateCameraPosition();
 
 		if (Controller.mouseMoved) {
@@ -88,7 +130,7 @@ class Controller {
 		}
 
 		if (Controller.updates.aspect) {
-			Controller.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight);
+			Controller.uniforms.iResolution.value = new THREE.Vector2(window.innerWidth, window.innerHeight);
 			Controller.uniforms.aspect.value = window.innerWidth / window.innerHeight;
 		}
 

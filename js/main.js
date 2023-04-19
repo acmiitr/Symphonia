@@ -107,7 +107,7 @@ function main() {
   geometry = new THREE.PlaneGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: Controller.uniforms,
-    fragmentShader: fragmentShader,
+    fragmentShader: fragmentShader(),
   });
 
   mesh = new THREE.Mesh(geometry, material);
