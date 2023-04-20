@@ -1,10 +1,11 @@
-import '/template/style.css'
+import "/template/style.css";
 
-import * as THREE from 'three';
+import * as THREE from "three";
 // import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-import { Controller } from "./controller.js";
+// import { Controller } from "./controller.js";
 import { fragmentShader } from "./shader.js";
+import { FirstPersonControls } from "./controller.js";
 
 // // Scene, Camera and Renderer
 // const scene = new THREE.Scene();
@@ -28,9 +29,8 @@ import { fragmentShader } from "./shader.js";
 
 // // camera.position.setZ(30);
 
-
 // //Init uniforms and materials
-// const uniforms = { //GLSL types only 
+// const uniforms = { //GLSL types only
 //   res: {
 //     type: 'vec2',
 //     value: new THREE.Vector2(window.innerWidth, window.innerHeight)
@@ -52,8 +52,7 @@ import { fragmentShader } from "./shader.js";
 
 // animate();
 
-
-// // // Adding objects here 
+// // // Adding objects here
 // // const obj_geometry = new THREE.BoxGeometry(5, 5, 5);
 // // const material1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
 // // const material2 = new THREE.MeshStandardMaterial({ color: "#f08c35" });
@@ -67,13 +66,12 @@ import { fragmentShader } from "./shader.js";
 
 // // // light
 // // const light = new THREE.DirectionalLight(0xffffff, 1, 100);
-// // const ambLight = new THREE.AmbientLight(0xffffff, 0.5) 
+// // const ambLight = new THREE.AmbientLight(0xffffff, 0.5)
 // // light.position.set(0, 10, 10);
 // // scene.add(light);
 // // scene.add(ambLight);
 
 // // camera.position.z = 25;
-
 
 // // updating on window size
 // window.addEventListener("resize", () => {
@@ -89,40 +87,75 @@ import { fragmentShader } from "./shader.js";
 //   renderer.render(scene, camera)
 // }
 
+let geometry, material, mesh, camera, controls, renderer, scene;
+const clock = new THREE.Clock();
 
-let geometry, material, mesh;
+scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xefd1b5 );
+main();
+animate();
 
 // Main ================================================
 function main() {
-  Controller.setup();
+    // add GUI
+    // var gui = new dat.GUI({ width: 300 });
 
-  // add GUI
-  // var gui = new dat.GUI({ width: 300 });
+    // for (var key in Controller.parameters) {
+    //   gui.add(Controller.parameters, key, -1.0, 1.0).onChange(Controller.changeParams);
+    // }
 
-  // for (var key in Controller.parameters) {
-  //   gui.add(Controller.parameters, key, -1.0, 1.0).onChange(Controller.changeParams);
-  // }
+    //camrea
+    camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        1,
+        10000
+	);
+	
+	// scene
+	scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xefd1b5);
 
-  // create plane of shader
-  geometry = new THREE.PlaneGeometry(2, 2);
-  material = new THREE.ShaderMaterial({
-    uniforms: Controller.uniforms,
-    fragmentShader: fragmentShader(),
-  });
+    //renderer
+    renderer = new THREE.WebGLRenderer();
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-  mesh = new THREE.Mesh(geometry, material);
+    // create plane of shader
+    geometry = new THREE.PlaneGeometry(2, 2);
+    material = new THREE.ShaderMaterial({
+        uniforms: FirstPersonControls.uniforms,
+        fragmentShader: fragmentShader(),
+    });
 
-  Controller.scene.add(mesh);
+    mesh = new THREE.Mesh(geometry, material);
 
-  // ANIMATE ==================
-  Controller.animate();
+    // FirsPersonCamera
+    controls = new FirstPersonControls(camera, renderer.domElement);
+    controls.movementSpeed = 150;
+    controls.lookSpeed = 0.1;
+    controls.activeLook = false;
+
+    window.addEventListener("resize", onWindowResize);
 }
 
-window.addEventListener('resize', Controller.windowResize, false);
-Controller.renderer.domElement.addEventListener('mousemove', Controller.mouseMove, false);
-Controller.renderer.domElement.addEventListener('click', Controller.onClick, false);
-window.addEventListener('keydown', Controller.onKeyDown, false);
-window.addEventListener('keyup', Controller.onKeyUp, false);
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
 
-// call to main
-main();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    controls.handleResize();
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    render();
+    //   stats.update();
+}
+
+function render() {
+    controls.update(clock.getDelta());
+    renderer.render(scene, camera);
+}
