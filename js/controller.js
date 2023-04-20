@@ -7,43 +7,6 @@ const _spherical = new Spherical();
 const _target = new Vector3();
 
 class FirstPersonControls {
-    static uniforms = {
-        iResolution: {
-            type: "vec2",
-            value: new THREE.Vector2(window.innerWidth, window.innerHeight),
-        },
-        iTime: { type: "float", value: 0.0 },
-        iTimeDelta: { type: "float", value: 0.0 },
-
-        aspect: { type: "float", value: this.aspect },
-
-        cameraX: { type: "vec3", value: this.cameraX },
-        cameraY: { type: "vec3", value: this.cameraY },
-        cameraZ: { type: "vec3", value: this.cameraZ },
-
-        camPos: { type: "vec3", value: this.cameraPos },
-        camFOV: { type: "float", value: this.cameraFOV },
-        camFront: { type: "vec3", value: this.cameraFront },
-        camUp: { type: "vec3", value: this.cameraUp },
-
-        MAX_MARCHING_STEPS: {
-            type: "int",
-            value: Controller.MAX_MARCHING_STEPS,
-        },
-        MIN_DISTANCE: { type: "float", value: Controller.MIN_DISTANCE },
-        MAX_DISTANCE: { type: "float", value: Controller.MAX_DISTANCE },
-        ITERATIONS: { type: "int", value: Controller.ITERATIONS },
-
-        sphere_fold_fixed_radius: {
-            type: "float",
-            value: Controller.sphere_fold_fixed_radius,
-        },
-        sphere_fold_min_radius: {
-            type: "float",
-            value: Controller.sphere_fold_min_radius,
-        },
-    };
-
     constructor(camera, domElement) {
         this.camera = camera;
         this.domElement = domElement;
@@ -91,7 +54,47 @@ class FirstPersonControls {
         let lat = 0;
         let lon = 0;
 
-        //
+        //fractal params
+        this.MAX_MARCHING_STEPS = 64;
+        this.MIN_DISTANCE = 0.00001;
+        this.MAX_DISTANCE = 1000.0;
+        this.ITERATIONS = 100;
+        this.sphere_fold_min_radius = 0.01;
+        this.sphere_fold_fixed_radius = 2.0;
+
+        //uniforms
+        this.uniforms = {
+            iResolution: {
+                type: "vec2",
+                value: new THREE.Vector2(window.innerWidth, window.innerHeight),
+            },
+            iTime: { type: "float", value: 0.0 },
+            iTimeDelta: { type: "float", value: 0.0 },
+
+            // aspect: { type: "float", value: this.aspect },
+
+            camPos: { type: "vec3", value: new THREE.Vector3(0.0, 2.0, 5.0) },
+            camFOV: { type: "float", value: 60.0 },
+            camFront: {
+                type: "vec3",
+                value: new THREE.Vector3(0.0, 0.0, -1.0),
+            },
+            camUp: { type: "vec3", value: new THREE.Vector3(0.0, 1.0, 0.0) },
+
+            MAX_MARCHING_STEPS: { type: "int", value: this.MAX_MARCHING_STEPS },
+            MIN_DISTANCE: { type: "float", value: this.MIN_DISTANCE },
+            MAX_DISTANCE: { type: "float", value: this.MAX_DISTANCE },
+            ITERATIONS: { type: "int", value: this.ITERATIONS },
+
+            sphere_fold_fixed_radius: {
+                type: "float",
+                value: this.sphere_fold_fixed_radius,
+            },
+            sphere_fold_min_radius: {
+                type: "float",
+                value: this.sphere_fold_min_radius,
+            },
+        };
 
         this.handleResize = function () {
             if (this.domElement === document) {
@@ -228,7 +231,7 @@ class FirstPersonControls {
         this.update = (function () {
             const targetPosition = new Vector3();
 
-            return function update(delta) {
+            return function update(delta, elapsedTime) {
                 if (this.enabled === false) return;
 
                 if (this.heightSpeed) {
@@ -302,10 +305,19 @@ class FirstPersonControls {
 
                 this.camera.lookAt(targetPosition);
                 // this.updateUniforms();
-				// console.log(this.pointerX);
-				// console.log(this.pointerY);
-				// console.log(this.mouseDragOn);
-				console.log(this.camera.position);
+                // console.log(this.pointerX);
+                // console.log(this.pointerY);
+                // console.log(this.mouseDragOn);
+                console.log(this.camera.position);
+
+                this.uniforms.iTime = elapsedTime;
+                this.uniforms.iTimeDelta = delta;
+                this.uniforms.camPos = this.camera.position;
+                this.domm = new THREE.Vector3()
+                this.camera.getWorldDirection(this.domm);
+                this.uniforms.camFront = this.domm;
+                this.uniforms.camFOV = this.camera.fov;
+                this.uniforms.camUp = new THREE.Vector3(0.0, 1.0, 0.0);
             };
         })();
 
