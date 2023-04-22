@@ -1,129 +1,167 @@
-import '/template/style.css'
+import "../template/style.css";
 
-import * as THREE from 'three';
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-
-import { Controller } from "./controller.js";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { FirstPersonControls } from "./controller";
 import { fragmentShader } from "./shader.js";
 
-// // Scene, Camera and Renderer
-// const scene = new THREE.Scene();
+import Stats from "stats.js";
 
-// let aspect_ratio = window.innerWidth / window.innerHeight;
+const _VS = `
+varying vec3 vWorldPosition;
+void main() {
+  vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+  vWorldPosition = worldPosition.xyz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}`;
 
-// const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
-
-// const renderer = new THREE.WebGLRenderer(
-//   {
-//     antialias: false,
-//     precision: 'highp',
-//     canvas: document.querySelector(".webgl"),
-//   }
-// )
-// renderer.setPixelRatio(window.devicePixelRatio);
-// renderer.setSize(window.innerWidth, window.innerHeight);
-
-// //Controls
-// const orbit = new OrbitControls(camera, renderer.domElement);
-
-// // camera.position.setZ(30);
-
-
-// //Init uniforms and materials
-// const uniforms = { //GLSL types only 
-//   res: {
-//     type: 'vec2',
-//     value: new THREE.Vector2(window.innerWidth, window.innerHeight)
-//   },
-//   aspect: {
-//     type: 'float', value: aspect_ratio
-//   }
-// };
-
-// const geometry = new THREE.PlaneGeometry(2000, 2000);
-// const material = new THREE.ShaderMaterial(
-//   {
-//     fragmentShader: fragmentShader(), // can also just be a string
-//     uniforms: uniforms
-//   }
-// );
-// const mesh = new THREE.Mesh(geometry, material);
-// scene.add(mesh);
-
-// animate();
+const _FS = `
+uniform vec3 topColor;
+uniform vec3 bottomColor;
+uniform float offset;
+uniform float exponent;
+varying vec3 vWorldPosition;
+void main() {
+  float h = normalize( vWorldPosition + offset ).y;
+  gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
+}`;
 
 
-// // // Adding objects here 
-// // const obj_geometry = new THREE.BoxGeometry(5, 5, 5);
-// // const material1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
-// // const material2 = new THREE.MeshStandardMaterial({ color: "#f08c35" });
-// // const obj = new THREE.Mesh(obj_geometry, material1);
-// // scene.add(obj);
+let model, clock, controls, shader_mat, renderer;
+let sun, sky;
 
-// // const plane_geometry = new THREE.PlaneGeometry(30, 30);
-// // const plane = new THREE.Mesh(plane_geometry, material2);
-// // // plane.rotateX(45);
-// // // scene.add(plane);
+// Scene, Camera and Renderer
+clock = new THREE.Clock();
 
-// // // light
-// // const light = new THREE.DirectionalLight(0xffffff, 1, 100);
-// // const ambLight = new THREE.AmbientLight(0xffffff, 0.5) 
-// // light.position.set(0, 10, 10);
-// // scene.add(light);
-// // scene.add(ambLight);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xa0a0a0);
 
-// // camera.position.z = 25;
+// fps counter
+var stats = Stats();
+document.body.appendChild(stats.domElement);
 
+const camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.01,
+    10000
+);
+camera.position.set(0, 5, 0);
 
-// // updating on window size
-// window.addEventListener("resize", () => {
-//   camera.updateProjectionMatrix()
-//   renderer.setSize(window.innerWidth, window.innerHeight)
-// })
+function loadSky() {
 
-// // updating the scene
-// function animate() {
-//   requestAnimationFrame(animate)
-//   // orbit.update();
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xfffffff, 0.6);
+    hemiLight.color.setHSL(0.6, 1, 0.6);
+    hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
 
-//   renderer.render(scene, camera)
-// }
+    const uniforms = {
+        topColor: { value: new THREE.Color(0x0077ff) },
+        bottomColor: { value: new THREE.Color(0xffffff) },
+        offset: { value: 33 },
+        exponent: { value: 0.6 },
+    };
+    // scene.fog.color.copy(uniforms["bottomColor"].value);
 
+    const skyGeo = new THREE.SphereGeometry(1000, 32, 15);
+    const skyMat = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: _VS,
+        fragmentShader: _FS,
+        side: THREE.BackSide,
+    });
 
-let geometry, material, mesh;
-
-// Main ================================================
-function main() {
-  Controller.setup();
-
-  // add GUI
-  // var gui = new dat.GUI({ width: 300 });
-
-  // for (var key in Controller.parameters) {
-  //   gui.add(Controller.parameters, key, -1.0, 1.0).onChange(Controller.changeParams);
-  // }
-
-  // create plane of shader
-  geometry = new THREE.PlaneGeometry(2, 2);
-  material = new THREE.ShaderMaterial({
-    uniforms: Controller.uniforms,
-    fragmentShader: fragmentShader(),
-    glslVersion: THREE.GLSL3,
-  });
-
-  mesh = new THREE.Mesh(geometry, material);
-
-  Controller.scene.add(mesh);
-
-  // ANIMATE ==================
-  Controller.animate();
+    const sky = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(sky);
 }
 
-window.addEventListener('resize', Controller.windowResize, false);
-Controller.renderer.domElement.addEventListener('mousemove', Controller.mouseMove, false);
-Controller.renderer.domElement.addEventListener('click', Controller.onClick, false);
-window.addEventListener('keydown', Controller.onKeyDown, false);
-window.addEventListener('keyup', Controller.onKeyUp, false);
+function main() {
+    scene.fog = new THREE.Fog( 0xa0a0a0, 1, 5000);
 
-// call to main
+    renderer = new THREE.WebGLRenderer({
+        canvas: document.querySelector(".webgl"),
+    });
+
+    controls = new FirstPersonControls(camera, renderer.domElement);
+    controls.movementSpeed = 20;
+    controls.lookSpeed = 0.8;
+    controls.activeLook = false;
+    controls.heightMin = -10;
+    controls.mouseDragOn = true;
+    // controls.autoForward = true;
+    controls.mouseDragOn = true;
+
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.update();
+
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    render.toneMappingExposure = 0.5;
+    // camera.position.setZ(30);
+
+    renderer.render(scene, camera);
+
+    // Adding objects here
+    const geom = new THREE.BoxGeometry(5, 5, 5);
+    const material = new THREE.MeshStandardMaterial({ color: "#ffffff" });
+    const box = new THREE.Mesh(geom, material);
+    box.castShadow = true;
+    box.position.set(0, 10, 0);
+    scene.add(box);
+
+    // todo
+    shader_mat = new THREE.ShaderMaterial({
+        uniforms: controls.uniforms,
+        fragmentShader: fragmentShader(),
+    });
+    const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(1000, 1000, 256, 256),
+        shader_mat,
+    );
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.receiveShadow = true;
+    scene.add(mesh);
+
+    // cont planeMat = new THREE.
+
+    // light
+    // const light = new THREE.DirectionalLight(0xffffff, 1, 100);
+    // light.position.set(0, 10, 30);
+    // light.castShadow = true;
+    // scene.add(light);
+
+    // const lightHelper = new THREE.DirectionalLightHelper(light, 1);
+    // scene.add(lightHelper);
+
+    camera.position.z = 25;
+
+    loadSky();
+
+    // updating on window size
+    // window.addEventListener("resize", onWindowResize);
+}
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    controls.handleResize();
+}
+
+// updating the scene
+function animate() {
+    // torus.position.x += 0.1
+    requestAnimationFrame(animate);
+    stats.update();
+    render();
+}
+
+function render() {
+    controls.update(clock.getDelta(), clock.elapsedTime);
+    renderer.render(scene, camera);
+}
+
+// Calls of funtion in order
 main();
+animate();
