@@ -9,6 +9,7 @@ const _lockEvent = { type: "lock" };
 const _unlockEvent = { type: "unlock" };
 
 const _PI_2 = Math.PI / 2;
+const VEL_FACTOR = 1000;
 
 class PointerLockControls extends EventDispatcher {
     constructor(camera, domElement) {
@@ -63,7 +64,7 @@ class PointerLockControls extends EventDispatcher {
                     break;
 
                 case "Space":
-                    // if (canJump === true) velocity.y += 100;
+                    if (canJump === true) velocity.y -= 10;
                     this.canJump = true;
                     break;
             }
@@ -180,10 +181,10 @@ class PointerLockControls extends EventDispatcher {
         console.log("Locked", this.getObject().position);
 
         if (this.isLocked === true) {
-            const delta = (currentTime - time) / 100;
+            const delta = (currentTime - time) / VEL_FACTOR;
 
-            this.velocity.x -= this.velocity.x * 1 * delta;
-            this.velocity.z -= this.velocity.z * 1 * delta;
+            this.velocity.x -= this.velocity.x * 10 * delta;
+            this.velocity.z -= this.velocity.z * 10 * delta;
 
             this.velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
