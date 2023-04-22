@@ -206,6 +206,7 @@ class FirstPersonControls {
                     break;
 
                 case "KeyR":
+                case 87:
                     this.moveUp = false;
                     break;
                 case "KeyF":
@@ -297,13 +298,8 @@ class FirstPersonControls {
             targetPosition.setFromSphericalCoords(1, phi, theta).add(position);
 
             this.camera.lookAt(targetPosition);
-            // this.updateUniforms();
-            // console.log(this.pointerX);
-            // console.log(this.pointerY);
-            // console.log(this.mouseDragOn)                console.log(this.camera.position);
 
             this.uniforms.iTime.value = elapsedTime;
-            // this.uniforms.iTime.needsUpdate = true;
             this.uniforms.iTimeDelta.value = delta;
             this.uniforms.camPos.value = this.camera.position;
             this.domm = new THREE.Vector3();
@@ -311,8 +307,6 @@ class FirstPersonControls {
             this.uniforms.camFront.value = this.domm;
             this.uniforms.camFOV.value = this.camera.fov;
             this.uniforms.camUp.value = new THREE.Vector3(0.0, 1.0, 0.0);
-
-            // shaderMaterial.uniforms.iTime.value = elapsedTime;
 
             // console.log(this.uniforms.iTime);
         };
