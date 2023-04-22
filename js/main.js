@@ -28,15 +28,8 @@ void main() {
 }`;
 
 let clock, controls, shader_mat, raycaster, renderer;
-const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
 let prevTime = performance.now();
 
-let moveForward = false;
-let moveBackward = false;
-let moveLeft = false;
-let moveRight = false;
-let canJump = false;
 // Scene, Camera and Renderer
 clock = new THREE.Clock();
 
@@ -117,69 +110,6 @@ function main() {
         10
     );
 
-    const onKeyDown = function (event) {
-        switch (event.code) {
-            case "ArrowUp":
-            case "KeyW":
-                moveForward = true;
-                break;
-
-            case "ArrowLeft":
-            case "KeyA":
-                moveLeft = true;
-                break;
-
-            case "ArrowDown":
-            case "KeyS":
-                moveBackward = true;
-                break;
-
-            case "ArrowRight":
-            case "KeyD":
-                moveRight = true;
-                break;
-
-            case "Space":
-                // if (canJump === true) velocity.y += 100;
-                canJump = true;
-                break;
-        }
-    };
-
-    const onKeyUp = function (event) {
-        switch (event.code) {
-            case "ArrowUp":
-            case "KeyW":
-                moveForward = false;
-                break;
-
-            case "ArrowLeft":
-            case "KeyA":
-                moveLeft = false;
-                break;
-
-            case "ArrowDown":
-            case "KeyS":
-                moveBackward = false;
-                break;
-
-            case "ArrowRight":
-            case "KeyD":
-                moveRight = false;
-                break;
-            
-            case "LeftShift":
-                canJump = false;
-                break;
-        }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("keyup", onKeyUp);
-
-    const orbit = new OrbitControls(camera, renderer.domElement);
-    orbit.update();
-
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     render.toneMappingExposure = 0.5;
@@ -199,11 +129,6 @@ function main() {
     scene.add(box);
     scene.add(box2);
 
-    // todo
-    // shader_mat = new THREE.ShaderMaterial({
-    //     uniforms: controls.uniforms,
-    //     fragmentShader: fragmentShader(),
-    // });
     const floor_mat = new THREE.MeshBasicMaterial({ color: "#76e3a1" });
     const mesh = new THREE.Mesh(
         new THREE.PlaneGeometry(1000, 1000, 100, 100),
@@ -239,40 +164,9 @@ function render() {
     // controls.update(clock.getDelta(), clock.elapsedTime);
 
     // const intersections = raycaster.intersectObjects(objects, false);
-    const time = performance.now();
-    console.log(controls.isLocked)
-
-    if (controls.isLocked === true) {
-        // raycaster.ray.origin.copy(controls.getObject().position);
-        // raycaster.ray.origin.y -= 10;
-        const delta = (time - prevTime) / 1000;
-
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-
-        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
-
-        direction.z = Number(moveForward) - Number(moveBackward);
-        direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize(); // this ensures consistent movements in all directions
-
-        if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
-
-
-        controls.moveRight(-velocity.x * delta);
-        controls.moveForward(-velocity.z * delta);
-
-        controls.getObject().position.y += velocity.y * delta; // new behavior
-
-        if (controls.getObject().position.y < 10) {
-            velocity.y = 0;
-            controls.getObject().position.y = 10;
-
-            canJump = true;
-        }
-    }
-    prevTime = time;
+    // const time = performance.now();
+    console.log(prevTime)
+    controls.update(prevTime);
     renderer.render(scene, camera);
 }
 

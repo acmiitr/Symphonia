@@ -15,6 +15,7 @@ class PointerLockControls extends EventDispatcher {
 
         this.camera = camera;
         this.domElement = domElement;
+        // this.rDomElement = rDomElement;
 
         this.isLocked = false;
 
@@ -24,6 +25,15 @@ class PointerLockControls extends EventDispatcher {
         this.maxPolarAngle = Math.PI; // radians
 
         this.pointerSpeed = 1.0;
+        this.velocity = new Vector3();
+        this.direction = new Vector3();
+
+        //Status
+        this.moveForward = false;
+        this.moveLeft = false;
+        this.moveRight = false;
+        this.moveBackward = false;
+        this.canJump = false;
 
         this._onMouseMove = onMouseMove.bind(this);
         this._onPointerlockChange = onPointerlockChange.bind(this);
@@ -33,27 +43,27 @@ class PointerLockControls extends EventDispatcher {
             switch (event.code) {
                 case "ArrowUp":
                 case "KeyW":
-                    moveForward = true;
+                    this.moveForward = true;
                     break;
 
                 case "ArrowLeft":
                 case "KeyA":
-                    moveLeft = true;
+                    this.moveLeft = true;
                     break;
 
                 case "ArrowDown":
                 case "KeyS":
-                    moveBackward = true;
+                    this.moveBackward = true;
                     break;
 
                 case "ArrowRight":
                 case "KeyD":
-                    moveRight = true;
+                    this.moveRight = true;
                     break;
 
                 case "Space":
                     // if (canJump === true) velocity.y += 100;
-                    canJump = true;
+                    this.canJump = true;
                     break;
             }
         };
@@ -62,26 +72,26 @@ class PointerLockControls extends EventDispatcher {
             switch (event.code) {
                 case "ArrowUp":
                 case "KeyW":
-                    moveForward = false;
+                    this.moveForward = false;
                     break;
 
                 case "ArrowLeft":
                 case "KeyA":
-                    moveLeft = false;
+                    this.moveLeft = false;
                     break;
 
                 case "ArrowDown":
                 case "KeyS":
-                    moveBackward = false;
+                    this.moveBackward = false;
                     break;
 
                 case "ArrowRight":
                 case "KeyD":
-                    moveRight = false;
+                    this.moveRight = false;
                     break;
 
                 case "LeftShift":
-                    canJump = false;
+                    this.canJump = false;
                     break;
             }
         };
@@ -102,6 +112,8 @@ class PointerLockControls extends EventDispatcher {
             "pointerlockerror",
             this._onPointerlockError
         );
+        document.addEventListener("keydown", this.onKeyDown.bind(this))
+        document.addEventListener("keyup", this.onKeyUp.bind(this))
     }
 
     disconnect() {
@@ -133,7 +145,7 @@ class PointerLockControls extends EventDispatcher {
         return v.set(0, -1, -1).applyQuaternion(this.camera.quaternion);
     }
 
-    moveForward(distance) {
+    fnMoveForward(distance) {
         // move forward parallel to the xz-plane
         // assumes camera.up is y-up
 
@@ -146,7 +158,7 @@ class PointerLockControls extends EventDispatcher {
         camera.position.addScaledVector(_vector, distance);
     }
 
-    moveRight(distance) {
+    fnMoveRight(distance) {
         const camera = this.camera;
 
         _vector.setFromMatrixColumn(camera.matrix, 0);
@@ -160,6 +172,42 @@ class PointerLockControls extends EventDispatcher {
 
     unlock() {
         this.domElement.ownerDocument.exitPointerLock();
+    }
+
+    update(time) {
+        const currentTime = performance.now();
+        console.log("Locked", this.getObject().position);
+
+        if (this.isLocked === true) {
+            const delta = (currentTime - time) / 100;
+
+            this.velocity.x -= this.velocity.x * 10.0 * delta;
+            this.velocity.z -= this.velocity.z * 10.0 * delta;
+
+            this.velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+            this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
+            this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
+            this.direction.normalize(); // this ensures consistent movements in all directions
+
+            if (this.moveForward || this.moveBackward)
+                this.velocity.z -= this.direction.z * 400.0 * delta;
+            if (this.moveLeft || this.moveRight)
+                this.velocity.x -= this.direction.x * 400.0 * delta;
+
+            this.fnMoveRight(-this.velocity.x * delta);
+            this.fnMoveForward(-this.velocity.z * delta);
+
+            this.getObject().position.y += this.velocity.y * delta; // new behavior
+
+            if (this.getObject().position.y < 10) {
+                this.velocity.y = 0;
+                this.getObject().position.y = 10;
+
+                this.canJump = false;
+            }
+        }
+        time = currentTime;
     }
 }
 
