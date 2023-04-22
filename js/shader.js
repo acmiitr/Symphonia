@@ -25,7 +25,7 @@ function fragmentShader() {
 	uniform float sphere_fold_fixed_radius;
 
 	void main(){
-		gl_FragColor = vec4(0.2, 0.5, 0.2,  1.0);
+		gl_FragColor = vec4(0.53, 0.74, 0.57,  1.0);
 	}
 
 `;

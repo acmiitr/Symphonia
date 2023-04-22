@@ -4,7 +4,6 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { FirstPersonControls } from "./controller";
 import { fragmentShader } from "./shader.js";
-import { Sky } from "three/addons/objects/Sky.js";
 
 import Stats from "stats.js";
 
@@ -45,8 +44,9 @@ const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
     0.01,
-    100000
+    10000
 );
+camera.position.set(0, 5, 0);
 
 function loadSky() {
 
@@ -88,6 +88,7 @@ function main() {
     controls.lookSpeed = 0.8;
     controls.activeLook = false;
     controls.heightMin = -10;
+    controls.mouseDragOn = true;
     // controls.autoForward = true;
     controls.mouseDragOn = true;
 
@@ -106,6 +107,7 @@ function main() {
     const material = new THREE.MeshStandardMaterial({ color: "#ffffff" });
     const box = new THREE.Mesh(geom, material);
     box.castShadow = true;
+    box.position.set(0, 10, 0);
     scene.add(box);
 
     // todo
@@ -114,11 +116,10 @@ function main() {
         fragmentShader: fragmentShader(),
     });
     const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(10000, 10000, 256, 256),
+        new THREE.PlaneGeometry(1000, 1000, 256, 256),
         shader_mat,
     );
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(0, -10, 0);
     mesh.receiveShadow = true;
     scene.add(mesh);
 
