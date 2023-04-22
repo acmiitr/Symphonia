@@ -77,7 +77,7 @@ function loadSky() {
 }
 
 function main() {
-    scene.fog = new THREE.Fog( 0xa0a0a0, 1, 5000);
+    scene.fog = new THREE.Fog( 0xa0a0a0, 1, 500);
 
     renderer = new THREE.WebGLRenderer({
         canvas: document.querySelector(".webgl"),
@@ -104,11 +104,15 @@ function main() {
 
     // Adding objects here
     const geom = new THREE.BoxGeometry(5, 5, 5);
-    const material = new THREE.MeshStandardMaterial({ color: "#ffffff" });
-    const box = new THREE.Mesh(geom, material);
+    const mat1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
+    const mat2 = new THREE.MeshStandardMaterial({ color: "#f542d4" });
+    const box = new THREE.Mesh(geom, mat1);
+    const box2 = new THREE.Mesh(geom, mat2);
     box.castShadow = true;
-    box.position.set(0, 10, 0);
+    box.position.set(-10, 10, 0);
+    box2.position.set(10, 10, 0);
     scene.add(box);
+    scene.add(box2);
 
     // todo
     shader_mat = new THREE.ShaderMaterial({
@@ -134,7 +138,7 @@ function main() {
     // const lightHelper = new THREE.DirectionalLightHelper(light, 1);
     // scene.add(lightHelper);
 
-    camera.position.z = 25;
+    camera.position.z = 10;
 
     loadSky();
 
