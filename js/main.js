@@ -166,7 +166,7 @@ function render() {
     // const intersections = raycaster.intersectObjects(objects, false);
     // const time = performance.now();
     console.log(prevTime)
-    controls.update(prevTime);
+    prevTime = controls.update(prevTime);
     renderer.render(scene, camera);
 }
 

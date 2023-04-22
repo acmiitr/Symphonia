@@ -1,5 +1,6 @@
 import { Euler, EventDispatcher, Vector3 } from "three";
 
+// let time = performance.now();
 const _euler = new Euler(0, 0, 0, "YXZ");
 const _vector = new Vector3();
 
@@ -112,8 +113,8 @@ class PointerLockControls extends EventDispatcher {
             "pointerlockerror",
             this._onPointerlockError
         );
-        document.addEventListener("keydown", this.onKeyDown.bind(this))
-        document.addEventListener("keyup", this.onKeyUp.bind(this))
+        document.addEventListener("keydown", this.onKeyDown.bind(this));
+        document.addEventListener("keyup", this.onKeyUp.bind(this));
     }
 
     disconnect() {
@@ -181,12 +182,13 @@ class PointerLockControls extends EventDispatcher {
         if (this.isLocked === true) {
             const delta = (currentTime - time) / 100;
 
-            this.velocity.x -= this.velocity.x * 10.0 * delta;
-            this.velocity.z -= this.velocity.z * 10.0 * delta;
+            this.velocity.x -= this.velocity.x * 1 * delta;
+            this.velocity.z -= this.velocity.z * 1 * delta;
 
             this.velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
-            this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
+            this.direction.z =
+                Number(this.moveForward) - Number(this.moveBackward);
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
             this.direction.normalize(); // this ensures consistent movements in all directions
 
@@ -206,8 +208,11 @@ class PointerLockControls extends EventDispatcher {
 
                 this.canJump = false;
             }
+
+            console.log(delta)
         }
         time = currentTime;
+        return currentTime;
     }
 }
 
