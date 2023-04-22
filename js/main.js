@@ -41,7 +41,7 @@ var stats = Stats();
 document.body.appendChild(stats.domElement);
 
 const camera = new THREE.PerspectiveCamera(
-    75,
+    90,
     window.innerWidth / window.innerHeight,
     0.01,
     10000
