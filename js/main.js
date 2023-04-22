@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { FirstPersonControls } from "./controller";
 import { fragmentShader } from "./shader.js";
 
-let model, skeleton, mixer, clock, controls, renderer;
+let model,clock, controls, shader_mat, renderer;
 
 // Scene, Camera and Renderer
 clock = new THREE.Clock();
@@ -50,12 +50,13 @@ function main() {
     scene.add(box);
 
     // todo
+    shader_mat = new THREE.ShaderMaterial({
+        uniforms: controls.uniforms,
+        fragmentShader: fragmentShader(),
+    });
     const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(100, 100),
-        new THREE.ShaderMaterial({
-            uniforms: FirstPersonControls.uniforms,
-            fragmentShader: fragmentShader(),
-        })
+        new THREE.PlaneGeometry(200, 200),
+        shader_mat,
     );
     mesh.rotation.x = -Math.PI / 2;
     mesh.receiveShadow = true;
@@ -93,7 +94,10 @@ function animate() {
 }
 
 function render() {
-    controls.update(clock.getDelta());
+    // mesh.
+    controls.update(clock.getDelta(), clock.elapsedTime);
+    console.log("itime",shader_mat.uniforms.iTimeDelta)
+    // controls.update(0.5, 0.5);
     renderer.render(scene, camera);
 }
 

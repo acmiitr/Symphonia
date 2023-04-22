@@ -68,7 +68,7 @@ class FirstPersonControls {
                 type: "vec2",
                 value: new THREE.Vector2(window.innerWidth, window.innerHeight),
             },
-            iTime: { type: "float", value: 0.0 },
+            iTime: { type: "float", value: 1.0 },
             iTimeDelta: { type: "float", value: 0.0 },
 
             // aspect: { type: "float", value: this.aspect },
@@ -228,98 +228,94 @@ class FirstPersonControls {
             return this;
         };
 
-        this.update = (function () {
+        this.update = function (delta, elapsedTime) {
             const targetPosition = new Vector3();
 
-            return function update(delta, elapsedTime) {
-                if (this.enabled === false) return;
+            if (this.enabled === false) return;
 
-                if (this.heightSpeed) {
-                    const y = MathUtils.clamp(
-                        this.camera.position.y,
-                        this.heightMin,
-                        this.heightMax
-                    );
-                    const heightDelta = y - this.heightMin;
+            if (this.heightSpeed) {
+                const y = MathUtils.clamp(
+                    this.camera.position.y,
+                    this.heightMin,
+                    this.heightMax
+                );
+                const heightDelta = y - this.heightMin;
 
-                    this.autoSpeedFactor =
-                        delta * (heightDelta * this.heightCoef);
-                } else {
-                    this.autoSpeedFactor = 0.0;
-                }
+                this.autoSpeedFactor = delta * (heightDelta * this.heightCoef);
+            } else {
+                this.autoSpeedFactor = 0.0;
+            }
 
-                const actualMoveSpeed = delta * this.movementSpeed;
+            const actualMoveSpeed = delta * this.movementSpeed;
 
-                if (
-                    this.moveForward ||
-                    (this.autoForward && !this.moveBackward)
-                )
-                    this.camera.translateZ(
-                        -(actualMoveSpeed + this.autoSpeedFactor)
-                    );
-                if (this.moveBackward) this.camera.translateZ(actualMoveSpeed);
+            if (this.moveForward || (this.autoForward && !this.moveBackward))
+                this.camera.translateZ(
+                    -(actualMoveSpeed + this.autoSpeedFactor)
+                );
+            if (this.moveBackward) this.camera.translateZ(actualMoveSpeed);
 
-                if (this.moveLeft) this.camera.translateX(-actualMoveSpeed);
-                if (this.moveRight) this.camera.translateX(actualMoveSpeed);
+            if (this.moveLeft) this.camera.translateX(-actualMoveSpeed);
+            if (this.moveRight) this.camera.translateX(actualMoveSpeed);
 
-                if (this.moveUp) this.camera.translateY(actualMoveSpeed);
-                if (this.moveDown) this.camera.translateY(-actualMoveSpeed);
+            if (this.moveUp) this.camera.translateY(actualMoveSpeed);
+            if (this.moveDown) this.camera.translateY(-actualMoveSpeed);
 
-                let actualLookSpeed = delta * this.lookSpeed;
+            let actualLookSpeed = delta * this.lookSpeed;
 
-                if (!this.activeLook) {
-                    actualLookSpeed = 0;
-                }
+            if (!this.activeLook) {
+                actualLookSpeed = 0;
+            }
 
-                let verticalLookRatio = 1;
+            let verticalLookRatio = 1;
 
-                if (this.constrainVertical) {
-                    verticalLookRatio =
-                        Math.PI / (this.verticalMax - this.verticalMin);
-                }
+            if (this.constrainVertical) {
+                verticalLookRatio =
+                    Math.PI / (this.verticalMax - this.verticalMin);
+            }
 
-                lon -= this.pointerX * actualLookSpeed;
-                if (this.lookVertical)
-                    lat -= this.pointerY * actualLookSpeed * verticalLookRatio;
+            lon -= this.pointerX * actualLookSpeed;
+            if (this.lookVertical)
+                lat -= this.pointerY * actualLookSpeed * verticalLookRatio;
 
-                lat = Math.max(-85, Math.min(85, lat));
+            lat = Math.max(-85, Math.min(85, lat));
 
-                let phi = MathUtils.degToRad(90 - lat);
-                const theta = MathUtils.degToRad(lon);
+            let phi = MathUtils.degToRad(90 - lat);
+            const theta = MathUtils.degToRad(lon);
 
-                if (this.constrainVertical) {
-                    phi = MathUtils.mapLinear(
-                        phi,
-                        0,
-                        Math.PI,
-                        this.verticalMin,
-                        this.verticalMax
-                    );
-                }
+            if (this.constrainVertical) {
+                phi = MathUtils.mapLinear(
+                    phi,
+                    0,
+                    Math.PI,
+                    this.verticalMin,
+                    this.verticalMax
+                );
+            }
 
-                const position = this.camera.position;
+            const position = this.camera.position;
 
-                targetPosition
-                    .setFromSphericalCoords(1, phi, theta)
-                    .add(position);
+            targetPosition.setFromSphericalCoords(1, phi, theta).add(position);
 
-                this.camera.lookAt(targetPosition);
-                // this.updateUniforms();
-                // console.log(this.pointerX);
-                // console.log(this.pointerY);
-                // console.log(this.mouseDragOn);
-                console.log(this.camera.position);
+            this.camera.lookAt(targetPosition);
+            // this.updateUniforms();
+            // console.log(this.pointerX);
+            // console.log(this.pointerY);
+            // console.log(this.mouseDragOn)                console.log(this.camera.position);
 
-                this.uniforms.iTime = elapsedTime;
-                this.uniforms.iTimeDelta = delta;
-                this.uniforms.camPos = this.camera.position;
-                this.domm = new THREE.Vector3()
-                this.camera.getWorldDirection(this.domm);
-                this.uniforms.camFront = this.domm;
-                this.uniforms.camFOV = this.camera.fov;
-                this.uniforms.camUp = new THREE.Vector3(0.0, 1.0, 0.0);
-            };
-        })();
+            this.uniforms.iTime.value = elapsedTime;
+            // this.uniforms.iTime.needsUpdate = true;
+            this.uniforms.iTimeDelta.value = delta;
+            this.uniforms.camPos.value = this.camera.position;
+            this.domm = new THREE.Vector3();
+            this.camera.getWorldDirection(this.domm);
+            this.uniforms.camFront.value = this.domm;
+            this.uniforms.camFOV.value = this.camera.fov;
+            this.uniforms.camUp.value = new THREE.Vector3(0.0, 1.0, 0.0);
+
+            // shaderMaterial.uniforms.iTime.value = elapsedTime;
+
+            // console.log(this.uniforms.iTime);
+        };
 
         this.dispose = function () {
             this.domElement.removeEventListener("contextmenu", contextmenu);
