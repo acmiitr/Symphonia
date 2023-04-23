@@ -161,11 +161,6 @@ function animate() {
 }
 
 function render() {
-    // controls.update(clock.getDelta(), clock.elapsedTime);
-
-    // const intersections = raycaster.intersectObjects(objects, false);
-    // const time = performance.now();
-    console.log(prevTime)
     prevTime = controls.update(prevTime);
     renderer.render(scene, camera);
 }

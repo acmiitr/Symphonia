@@ -35,7 +35,8 @@ class PointerLockControls extends EventDispatcher {
         this.moveLeft = false;
         this.moveRight = false;
         this.moveBackward = false;
-        this.canJump = false;
+        this.moveDown = false;
+        this.moveUp = false;
 
         this._onMouseMove = onMouseMove.bind(this);
         this._onPointerlockChange = onPointerlockChange.bind(this);
@@ -64,8 +65,12 @@ class PointerLockControls extends EventDispatcher {
                     break;
 
                 case "Space":
-                    if (canJump === true) velocity.y -= 10;
-                    this.canJump = true;
+                    // if (canJump === true) velocity.y -= 10;
+                    this.moveUp = true;
+                    break;
+                
+                case "ShiftLeft":
+                    this.moveDown = true;
                     break;
             }
         };
@@ -91,9 +96,13 @@ class PointerLockControls extends EventDispatcher {
                 case "KeyD":
                     this.moveRight = false;
                     break;
+                
+                case "Space":
+                    this.moveUp = false;
+                    break;
 
-                case "LeftShift":
-                    this.canJump = false;
+                case "ShiftLeft":
+                    this.moveDown = false;
                     break;
             }
         };
@@ -168,6 +177,14 @@ class PointerLockControls extends EventDispatcher {
         camera.position.addScaledVector(_vector, distance);
     }
 
+    fnMoveUp(distance) {
+        console.log("distance",distance);
+        const camera = this.camera;
+        // _vector.crossVectors(camera., _vector);
+        // console.log("vector",_vector)
+        camera.position.addScaledVector(camera.up, distance);
+    }
+
     lock() {
         this.domElement.requestPointerLock();
     }
@@ -178,7 +195,7 @@ class PointerLockControls extends EventDispatcher {
 
     update(time) {
         const currentTime = performance.now();
-        console.log("Locked", this.getObject().position);
+        // console.log("Locked", this.getObject().position);
 
         if (this.isLocked === true) {
             const delta = (currentTime - time) / VEL_FACTOR;
@@ -192,26 +209,30 @@ class PointerLockControls extends EventDispatcher {
             this.direction.z =
                 Number(this.moveForward) - Number(this.moveBackward);
             this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
+            this.direction.y = Number(this.moveUp) - Number(this.moveDown);
             this.direction.normalize(); // this ensures consistent movements in all directions
 
             if (this.moveForward || this.moveBackward)
                 this.velocity.z -= this.direction.z * 400.0 * delta;
             if (this.moveLeft || this.moveRight)
                 this.velocity.x -= this.direction.x * 400.0 * delta;
+            if (this.moveUp || this.moveDown)
+                this.velocity.y -= this.direction.y * 400.0 * delta;
 
             this.fnMoveRight(-this.velocity.x * delta);
             this.fnMoveForward(-this.velocity.z * delta);
+            this.fnMoveUp(-this.velocity.y * delta);
 
-            this.getObject().position.y += this.velocity.y * delta; // new behavior
+            // this.getObject().position.y += this.velocity.y * delta; // new behavior
 
-            if (this.getObject().position.y < 10) {
-                this.velocity.y = 0;
-                this.getObject().position.y = 10;
+            // if (this.getObject().position.y < 10) {
+            //     this.velocity.y = 0;
+            //     this.getObject().position.y = 10;
 
-                this.canJump = false;
-            }
+            //     this.canJump = false;
+            // }
 
-            console.log(delta)
+            // console.log(delta)
         }
         time = currentTime;
         return currentTime;
