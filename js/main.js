@@ -56,12 +56,12 @@ function loadSky() {
     scene.add(hemiLight);
 
     const uniforms = {
-        topColor: { value: new THREE.Color(0x06319e) },
-        bottomColor: { value: new THREE.Color(0xe8e0ae) },
+        topColor: { value: new THREE.Color(0x217eff) },
+        bottomColor: { value: new THREE.Color(0xffffff) },
         offset: { value: 33 },
         exponent: { value: 0.6 },
     };
-    // scene.fog.color.copy(uniforms["bottomColor"].value);
+    scene.fog.color.copy(uniforms["bottomColor"].value);
 
     const skyGeo = new THREE.SphereGeometry(1000, 32, 15);
     const skyMat = new THREE.ShaderMaterial({
@@ -118,7 +118,7 @@ function main() {
     renderer.render(scene, camera);
 
     // Adding objects here
-    const geom = new THREE.BoxGeometry(5, 5, 5);
+    const geom = new THREE.BoxGeometry(1, 1, 1);
     const mat1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
     const mat2 = new THREE.MeshStandardMaterial({ color: "#f542d4" });
     const box = new THREE.Mesh(geom, mat1);
