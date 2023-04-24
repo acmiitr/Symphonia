@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { FirstPersonControls } from "./controller";
 import { fragmentShader } from "./shader.js";
+import { PointerLockControls } from "./pointerlock";
 
 import Stats from "stats.js";
 
@@ -26,9 +27,8 @@ void main() {
   gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h , 0.0), exponent ), 0.0 ) ), 1.0 );
 }`;
 
-
-let model, clock, controls, shader_mat, renderer;
-let sun, sky;
+let clock, controls, shader_mat, raycaster, renderer;
+let prevTime = performance.now();
 
 // Scene, Camera and Renderer
 clock = new THREE.Clock();
@@ -43,26 +43,25 @@ document.body.appendChild(stats.domElement);
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
-    0.01,
+    0.1,
     10000
 );
-camera.position.set(0, 5, 0);
+camera.position.set(0, 10, 0);
 
 function loadSky() {
-
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0xfffffff, 0.6);
-    hemiLight.color.setHSL(0.6, 1, 0.6);
+    hemiLight.color.setHSL(0.5, 1, 0.75);
     hemiLight.groundColor.setHSL(0.095, 1, 0.75);
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
 
     const uniforms = {
-        topColor: { value: new THREE.Color(0x0077ff) },
+        topColor: { value: new THREE.Color(0x217eff) },
         bottomColor: { value: new THREE.Color(0xffffff) },
         offset: { value: 33 },
         exponent: { value: 0.6 },
     };
-    // scene.fog.color.copy(uniforms["bottomColor"].value);
+    scene.fog.color.copy(uniforms["bottomColor"].value);
 
     const skyGeo = new THREE.SphereGeometry(1000, 32, 15);
     const skyMat = new THREE.ShaderMaterial({
@@ -77,23 +76,39 @@ function loadSky() {
 }
 
 function main() {
-    scene.fog = new THREE.Fog( 0xa0a0a0, 1, 5000);
+    scene.fog = new THREE.Fog(0xa0a0a0, 1, 500);
 
     renderer = new THREE.WebGLRenderer({
         canvas: document.querySelector(".webgl"),
+        antialias: true,
     });
 
-    controls = new FirstPersonControls(camera, renderer.domElement);
-    controls.movementSpeed = 20;
-    controls.lookSpeed = 0.8;
-    controls.activeLook = false;
-    controls.heightMin = -10;
-    controls.mouseDragOn = true;
-    // controls.autoForward = true;
-    controls.mouseDragOn = true;
+    controls = new PointerLockControls(camera, document.body);
 
-    const orbit = new OrbitControls(camera, renderer.domElement);
-    orbit.update();
+    const blocker = document.getElementById("blocker");
+    const instructions = document.getElementById("instructions");
+
+    blocker.addEventListener("click", function () {
+        controls.lock();
+    });
+
+    controls.addEventListener("lock", function () {
+        instructions.style.display = "none";
+        blocker.style.display = "none";
+    });
+
+    controls.addEventListener("unlock", function () {
+        blocker.style.display = "block";
+        instructions.style.display = "";
+    });
+    scene.add(controls.getObject());
+
+    raycaster = new THREE.Raycaster(
+        new THREE.Vector3(),
+        new THREE.Vector3(0, -1, 0),
+        0,
+        10
+    );
 
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -103,50 +118,38 @@ function main() {
     renderer.render(scene, camera);
 
     // Adding objects here
-    const geom = new THREE.BoxGeometry(5, 5, 5);
-    const material = new THREE.MeshStandardMaterial({ color: "#ffffff" });
-    const box = new THREE.Mesh(geom, material);
+    const geom = new THREE.BoxGeometry(1, 1, 1);
+    const mat1 = new THREE.MeshStandardMaterial({ color: "#4287f5" });
+    const mat2 = new THREE.MeshStandardMaterial({ color: "#f542d4" });
+    const box = new THREE.Mesh(geom, mat1);
+    const box2 = new THREE.Mesh(geom, mat2);
     box.castShadow = true;
-    box.position.set(0, 10, 0);
+    box.position.set(-10, 10, 0);
+    box2.position.set(10, 10, 0);
     scene.add(box);
+    scene.add(box2);
 
-    // todo
-    shader_mat = new THREE.ShaderMaterial({
-        uniforms: controls.uniforms,
-        fragmentShader: fragmentShader(),
-    });
+    const floor_mat = new THREE.MeshBasicMaterial({ color: "#76e3a1" });
     const mesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(1000, 1000, 256, 256),
-        shader_mat,
+        new THREE.PlaneGeometry(1000, 1000, 100, 100),
+        floor_mat
     );
     mesh.rotation.x = -Math.PI / 2;
     mesh.receiveShadow = true;
     scene.add(mesh);
 
-    // cont planeMat = new THREE.
-
-    // light
-    // const light = new THREE.DirectionalLight(0xffffff, 1, 100);
-    // light.position.set(0, 10, 30);
-    // light.castShadow = true;
-    // scene.add(light);
-
-    // const lightHelper = new THREE.DirectionalLightHelper(light, 1);
-    // scene.add(lightHelper);
-
-    camera.position.z = 25;
+    camera.position.z = 10;
 
     loadSky();
 
     // updating on window size
-    // window.addEventListener("resize", onWindowResize);
+    window.addEventListener("resize", onWindowResize);
 }
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
     renderer.setSize(window.innerWidth, window.innerHeight);
-    controls.handleResize();
 }
 
 // updating the scene
@@ -158,7 +161,7 @@ function animate() {
 }
 
 function render() {
-    controls.update(clock.getDelta(), clock.elapsedTime);
+    prevTime = controls.update(prevTime);
     renderer.render(scene, camera);
 }
 
