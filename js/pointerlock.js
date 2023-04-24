@@ -222,17 +222,14 @@ class PointerLockControls extends EventDispatcher {
             this.fnMoveRight(-this.velocity.x * delta);
             this.fnMoveForward(-this.velocity.z * delta);
             this.fnMoveUp(-this.velocity.y * delta);
+            
+            // Defining y min
+            if (this.getObject().position.y < 10) {
+                this.velocity.y = 0;
+                this.getObject().position.y = 10;
 
-            // this.getObject().position.y += this.velocity.y * delta; // new behavior
+            }
 
-            // if (this.getObject().position.y < 10) {
-            //     this.velocity.y = 0;
-            //     this.getObject().position.y = 10;
-
-            //     this.canJump = false;
-            // }
-
-            // console.log(delta)
         }
         time = currentTime;
         return currentTime;
